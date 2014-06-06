@@ -65,7 +65,7 @@ After running the project, the file tree might look like this:
 
 (Side note: Certain .py files do not have corresponding .pyc files because they are executed as scripts rather than imported. If desired, .pyc files may be [manually generated](https://docs.python.org/2/library/compileall.html#module-compileall) for them via `python -m compileall`. Remember, though, that this will only affect the scripts' load time, and must be repeated after every change to the scripts, or else Python will detect that the .pyc files are outdated and ignore them.)
 
-Now suppose we move utils.py out of the organization app, to become a base-level app-agnostic module. To do this properly, the version control system must be made aware of the move, and any `from organization import utils` or `from . import utils` statements must be refactored to `import utils`. (This process is as simple as dragging and dropping the file with PyCharm and other similar tools, but is also doable manually.) The file tree will now look like this:
+Now suppose we move utils.py out of the organization app, to become a base-level app-agnostic module. To do this properly, the version control system must be made aware of the move, and any `from organization import utils` or `from . import utils` statements must be changed to `import utils`. (This process is as simple as dragging and dropping the file with PyCharm and other similar tools, but is also doable manually.) The file tree will now look like this:
 
     ap
     ├── ap
@@ -122,27 +122,25 @@ A quick fix for this problem is to manually delete the rogue .pyc files, althoug
 
 [David Winterbottom](http://codeinthehole.com/writing/a-useful-git-post-checkout-hook-for-python-repos/) provides a script to clean up .pyc files and empty directories after a checkout. Save this code as `.git/hooks/post-checkout` and make it executable:
 
-```bash
-#!/usr/bin/env bash
-
-# Delete .pyc files and empty directories from root of project
-cd ./$(git rev-parse --show-cdup)
-
-# Clean-up (OS X-specific)
-find . -name ".DS_Store" -delete
-
-NUM_PYC_FILES=$( find . -name "*.pyc" | wc -l | tr -d ' ' )
-if [ $NUM_PYC_FILES -gt 0 ]; then
-    find . -name "*.pyc" -delete
-    printf "\e[00;31mDeleted $NUM_PYC_FILES .pyc files\e[00m\n"
-fi
-
-NUM_EMPTY_DIRS=$( find . -type d -empty | wc -l | tr -d ' ' )
-if [ $NUM_EMPTY_DIRS -gt 0 ]; then
-    find . -type d -empty -delete
-    printf "\e[00;31mDeleted $NUM_EMPTY_DIRS empty directories\e[00m\n"
-fi
-```
+    #!/usr/bin/env bash
+    
+    # Delete .pyc files and empty directories from root of project
+    cd ./$(git rev-parse --show-cdup)
+    
+    # Clean-up (OS X-specific)
+    find . -name ".DS_Store" -delete
+    
+    NUM_PYC_FILES=$( find . -name "*.pyc" | wc -l | tr -d ' ' )
+    if [ $NUM_PYC_FILES -gt 0 ]; then
+        find . -name "*.pyc" -delete
+        printf "\e[00;31mDeleted $NUM_PYC_FILES .pyc files\e[00m\n"
+    fi
+    
+    NUM_EMPTY_DIRS=$( find . -type d -empty | wc -l | tr -d ' ' )
+    if [ $NUM_EMPTY_DIRS -gt 0 ]; then
+        find . -type d -empty -delete
+        printf "\e[00;31mDeleted $NUM_EMPTY_DIRS empty directories\e[00m\n"
+    fi
 
 
 ### Prevention
@@ -168,7 +166,7 @@ This process may be simplified by adding `PYTHONDONTWRITEBYTECODE=1` to the envi
 
 - For a more targeted solution, add that line instead to your virtualenv's `bin/activate` file. This will disable writing .pyc files in that shell after you source the file, but will not unset the variable when you call `deactivate`; other shells will remain unaffected, though. If you really want your virtualenv to set and unset that variable transparently like it does for your `PATH`, make the following changes to its `bin/activate`:
 
-    - Add this code anywhere:
+    - Add this code to the main script:
 
             # Tell Python not to write out .pyc files.
             _OLD_PYTHONDONTWRITEBYTECODE="$PYTHONDONTWRITEBYTECODE"
