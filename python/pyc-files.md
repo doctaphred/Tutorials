@@ -45,7 +45,10 @@ In fact, they [elsewhere explain](https://docs.python.org/2/whatsnew/2.5.html#pe
 
 > It is possible to have a file called `spam.pyc` (or `spam.pyo` when -O is used) without a file `spam.py` for the same module.
 
-This means that, if a module has imported and compiled and later moved, its corresponding .pyc file may remain **as a viable, identically-named module of its own**.
+This means that, if a module has been imported and compiled and later moved, **its corresponding .pyc file may remain** as a viable, identically-named module of its own, which may **shadow the moved module and cause very strange problems**.
+
+
+### Example
 
 Consider the following Django project structure:
 
