@@ -1,6 +1,11 @@
 # On Compiled Python Files
 
 
+## TL;DR
+
+Python 2's import semantics and handling of .pyc files can cause an insidious development problem when moving modules to different directories. To avoid it, either set `PYTHONDONTWRITEBYTECODE=1` in your development environment, or else be sure to delete .pyc files when refactoring your project structure or switching between VCS branches.
+
+
 ## Background
 
 When a Python module is loaded from a .py file, the interpreter compiles the source to its choice of bytecode, which remains in memory and is executed. CPython writes this compiled bytecode out to .pyc files for imported modules (but not for scripts that are directly executed), in order to skip the compilation step and load them faster the next time.
@@ -207,6 +212,11 @@ These problems have been addressed in Python 3, which uses absolute import seman
 - TODO: what happens in the case `from . import module` where `module.py` has been moved to another package but `__pycache__/module.[magic].pyc` persists?
 
 - TODO: mention `from __future__ import absolute_import`.
+
+
+## Conclusion
+
+This problem is surprisingly easily encountered and can be devastatingly subtle to identify. Python 3 will relieve many such headaches (and hopefully not introduce too many more), but until you're using it, I recommend either configuring your IDE's environment settings or adding a Git hook to avoid this particular frustration.
 
 
 ## Further Reading
