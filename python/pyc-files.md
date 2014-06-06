@@ -34,7 +34,7 @@ In fact, they [elsewhere explain](https://docs.python.org/2/whatsnew/2.5.html#pe
 
 > Consider the code in the `main.py` module. What happens if it executes the statement `import string`? In Python 2.4 and earlier, it will first look in the package’s directory to perform a relative import, finds `pkg/string.py`, imports the contents of that file as the `pkg.string` module, and that module is bound to the name `string` in the `pkg.main` module’s namespace.
 
-> That’s fine if `pkg.string` was what you wanted. But what if you wanted Python’s standard `string` module? There’s no clean way to ignore pkg.string and look for the standard module
+> That’s fine if `pkg.string` was what you wanted. But what if you wanted Python’s standard `string` module? There’s no clean way to ignore pkg.string and look for the standard module; generally you had to look at the contents of `sys.modules`, which is slightly unclean.
 
 [Furthermore](https://docs.python.org/2/tutorial/modules.html#compiled-python-files):
 
