@@ -21,7 +21,20 @@ but later [clarify](https://docs.python.org/2/tutorial/modules.html#intra-packag
 
 > the `import` statement first looks in the containing package before looking in the standard module search path.
 
-In fact, they elsewhere explain that, due to Python 2's default relative import semantics, a file `string.py` [can completely shadow](https://docs.python.org/2/whatsnew/2.5.html#pep-328-absolute-and-relative-imports) the built-in `string` module.
+In fact, they [elsewhere explain](https://docs.python.org/2/whatsnew/2.5.html#pep-328-absolute-and-relative-imports) that, due to Python 2's default relative import semantics, a file `string.py` can completely shadow the built-in `string` module:
+
+> Let’s say you have a package directory like this:
+
+>     pkg/
+>     pkg/__init__.py
+>     pkg/main.py
+>     pkg/string.py
+    
+> This defines a package named `pkg` containing the `pkg.main` and `pkg.string` submodules.
+
+> Consider the code in the `main.py` module. What happens if it executes the statement `import string`? In Python 2.4 and earlier, it will first look in the package’s directory to perform a relative import, finds `pkg/string.py`, imports the contents of that file as the `pkg.string` module, and that module is bound to the name `string` in the `pkg.main` module’s namespace.
+
+> That’s fine if `pkg.string` was what you wanted. But what if you wanted Python’s standard `string` module? There’s no clean way to ignore pkg.string and look for the standard module.
 
 [Furthermore](https://docs.python.org/2/tutorial/modules.html#compiled-python-files):
 
@@ -75,7 +88,7 @@ After running the project, the file tree might look like this:
         ├── views.py
         └── views.pyc
 
-(Side note: Certain .py files do not have corresponding .pyc files because they are executed as scripts rather than imported. If desired, .pyc files may be [manually generated](https://docs.python.org/2/library/compileall.html#module-compileall) for them via `python -m compileall`. Remember, though, that this will only affect the scripts' load time, and must be repeated after every change to the scripts, or else Python will detect that the .pyc files are outdated and ignore them.)
+> Side note: Certain .py files do not have corresponding .pyc files because they are executed as scripts rather than imported. If desired, .pyc files may be [manually generated](https://docs.python.org/2/library/compileall.html#module-compileall) for them via `python -m compileall`. Remember, though, that this will only affect the scripts' load time, and must be repeated after every change to the scripts, or else Python will detect that the .pyc files are outdated and ignore them.
 
 Now suppose we refactor utils.py out of the organization app, to become a base-level app-agnostic module. To do this properly, the version control system must be made aware of the move, and any `from organization import utils` or `from . import utils` statements must be changed to `import utils`. (This process is as simple as dragging and dropping the file with PyCharm and other similar tools, but is also doable manually.) The file tree will now look like this:
 
@@ -167,7 +180,7 @@ This process may be simplified by adding it to the environment settings of your 
 
 - In PyCharm, select `Run -> Edit Configurations...`, select the configuration you use and the `Configuration` tab, click the `...` button next to `Environment variables:`, and add a Name `PYTHONDONTWRITEBYTECODE` with Value `1`. (Click `OK` on both modal windows to save the changes.)
 
-- For a more general solution, add the line [`export PYTHONDONTWRITEBYTECODE=1` to your `~/.bashrc` file](http://unix.stackexchange.com/questions/107851/using-export-in-bashrc). Note that this will affect your Python system-wide, though, and might not be desirable.
+- For a more general solution, [add the line `export PYTHONDONTWRITEBYTECODE=1` to your `~/.bashrc` file](http://unix.stackexchange.com/questions/107851/using-export-in-bashrc). Note that this will affect your Python system-wide, though, and might not be desirable.
 
 - For a more targeted solution, add that line instead to your virtualenv's `bin/activate` file. This will disable writing .pyc files in that shell after you source the file, but will not unset the variable when you call `deactivate`; other shells will remain unaffected, though. If you really want your virtualenv to set and unset that variable transparently like it does for your `PATH`, make the following changes to its `bin/activate`:
 
@@ -184,7 +197,7 @@ This process may be simplified by adding it to the environment settings of your 
             export PYTHONDONTWRITEBYTECODE
             unset _OLD_PYTHONDONTWRITEBYTECODE
 
-        (Note: I do not know why the other similar actions in `deactivate` are conditional on `$_OLD_X` being nonempty; maybe there's a good reason, but it results in the variable remaining set after running `deactivate` if it was not set before sourcing `activate`, which seems like incorrect behavior.)
+        > Note: I do not know why the other similar actions in `deactivate` are conditional on `$_OLD_X` being nonempty; maybe there's a good reason, but it results in the variable remaining set after running `deactivate` if it was not set before sourcing `activate`, which seems like incorrect behavior.
 
 
 ### Future Hope
