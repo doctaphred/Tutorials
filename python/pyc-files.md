@@ -63,9 +63,7 @@ After running the project, the file tree might look like this:
         ├── views.py
         └── views.pyc
 
-(Side note: Certain .py files do not have corresponding .pyc files because they are executed as scripts rather than imported. If desired, .pyc files may be [manually generated](compileall) for them via `python -m compileall`. Remember, though, that this will only affect the scripts' load time, and must be repeated after every change to the scripts, or else Python will detect that the .pyc files are outdated and ignore them.)
-
-    [compileall]: https://docs.python.org/2/library/compileall.html#module-compileall
+(Side note: Certain .py files do not have corresponding .pyc files because they are executed as scripts rather than imported. If desired, .pyc files may be [manually generated](https://docs.python.org/2/library/compileall.html#module-compileall) for them via `python -m compileall`. Remember, though, that this will only affect the scripts' load time, and must be repeated after every change to the scripts, or else Python will detect that the .pyc files are outdated and ignore them.)
 
 Now suppose we move utils.py out of the organization app, to become a base-level app-agnostic module. To do this properly, the version control system must be made aware of the move, and any `from organization import utils` or `from . import utils` statements must be refactored to `import utils`. (This process is as simple as dragging and dropping the file with PyCharm and other similar tools, but is also doable manually.) The file tree will now look like this:
 
@@ -124,36 +122,36 @@ A quick fix for this problem is to manually delete the rogue .pyc files, althoug
 
 [David Winterbottom](http://codeinthehole.com/writing/a-useful-git-post-checkout-hook-for-python-repos/) provides a script to clean up .pyc files and empty directories after a checkout. Save this code as `.git/hooks/post-checkout` and make it executable:
 
-    #!/usr/bin/env bash
+```bash
+#!/usr/bin/env bash
 
-    # Delete .pyc files and empty directories from root of project
-    cd ./$(git rev-parse --show-cdup)
+# Delete .pyc files and empty directories from root of project
+cd ./$(git rev-parse --show-cdup)
 
-    # Clean-up (OS X-specific)
-    find . -name ".DS_Store" -delete
+# Clean-up (OS X-specific)
+find . -name ".DS_Store" -delete
 
-    NUM_PYC_FILES=$( find . -name "*.pyc" | wc -l | tr -d ' ' )
-    if [ $NUM_PYC_FILES -gt 0 ]; then
-        find . -name "*.pyc" -delete
-        printf "\e[00;31mDeleted $NUM_PYC_FILES .pyc files\e[00m\n"
-    fi
+NUM_PYC_FILES=$( find . -name "*.pyc" | wc -l | tr -d ' ' )
+if [ $NUM_PYC_FILES -gt 0 ]; then
+    find . -name "*.pyc" -delete
+    printf "\e[00;31mDeleted $NUM_PYC_FILES .pyc files\e[00m\n"
+fi
 
-    NUM_EMPTY_DIRS=$( find . -type d -empty | wc -l | tr -d ' ' )
-    if [ $NUM_EMPTY_DIRS -gt 0 ]; then
-        find . -type d -empty -delete
-        printf "\e[00;31mDeleted $NUM_EMPTY_DIRS empty directories\e[00m\n"
-    fi
+NUM_EMPTY_DIRS=$( find . -type d -empty | wc -l | tr -d ' ' )
+if [ $NUM_EMPTY_DIRS -gt 0 ]; then
+    find . -type d -empty -delete
+    printf "\e[00;31mDeleted $NUM_EMPTY_DIRS empty directories\e[00m\n"
+fi
+```
 
 
 ### Prevention
 
 It can make sense to prevent .pyc files entirely on a development machine: some modules may load slightly slower, but you might also avoid a lot of problems. To do so, set the environment variable `PYTHONDONTWRITEBYTECODE` (to any value).
 
-From [the docs](PYTHONDONTWRITEBYTECODE):
+From [the docs](https://docs.python.org/2/using/cmdline.html#envvar-PYTHONDONTWRITEBYTECODE):
 
 > If this is set, Python won’t try to write .pyc or .pyo files on the import of source modules. This is equivalent to specifying the -B option.
-
-    [PYTHONDONTWRITEBYTECODE]: https://docs.python.org/2/using/cmdline.html#envvar-PYTHONDONTWRITEBYTECODE
 
 However, the -B option does not appear to work with django (TODO: find out why). Setting `PYTHONDONTWRITEBYTECODE` does, though:
 
@@ -166,9 +164,7 @@ This process may be simplified by adding `PYTHONDONTWRITEBYTECODE=1` to the envi
 
 - In PyCharm, select `Run -> Edit Configurations...`, select the configuration you use and the `Configuration` tab, click the `...` button next to `Environment variables:`, and add a Name `PYTHONDONTWRITEBYTECODE` with Value `1`. (Click `OK` on both modal windows to save the changes.)
 
-- For a more general solution, add the line [`export PYTHONDONTWRITEBYTECODE=1` to your `~/.bashrc` file](bashrc-export). Note that this will affect your Python system-wide, though, and might not be desirable.
-
-    [bashrc-export]: http://unix.stackexchange.com/questions/107851/using-export-in-bashrc
+- For a more general solution, add the line [`export PYTHONDONTWRITEBYTECODE=1` to your `~/.bashrc` file](http://unix.stackexchange.com/questions/107851/using-export-in-bashrc). Note that this will affect your Python system-wide, though, and might not be desirable.
 
 - For a more targeted solution, add that line instead to your virtualenv's `bin/activate` file. This will disable writing .pyc files in that shell after you source the file, but will not unset the variable when you call `deactivate`; other shells will remain unaffected, though. If you really want your virtualenv to set and unset that variable transparently like it does for your `PATH`, make the following changes to its `bin/activate`:
 
@@ -197,6 +193,6 @@ These problems have been addressed in Python 3, which uses absolute import seman
 
 ## Further Reading
 
-- [Alex Martelli's take on the "interpreted" vs "compiled" nature of Python](http://stackoverflow.com/questions/2998215/if-python-is-interpreted-what-are-pyc-files/2998544#2998544)
+- [Alex Martelli's take on the "interpreted" (vs "compiled") nature of Python](http://stackoverflow.com/questions/2998215/if-python-is-interpreted-what-are-pyc-files/2998544#2998544)
 - [PEP 328 -- Imports: Multi-Line and Absolute/Relative](http://legacy.python.org/dev/peps/pep-0328/)
 - [PEP 3147 -- PYC Repository Directories](http://legacy.python.org/dev/peps/pep-3147/)
