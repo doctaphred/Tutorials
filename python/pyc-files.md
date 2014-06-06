@@ -13,11 +13,23 @@ From [the docs](https://docs.python.org/2/tutorial/modules.html#compiled-python-
 
 ## Problem
 
+The docs [claim](https://docs.python.org/2/tutorial/modules.html#the-module-search-path):
+
+> When a module named `spam` is imported, the interpreter first searches for a built-in module with that name. If not found, it then searches for a file named `spam.py` in a list of directories given by the variable `sys.path`.
+
+but later [clarify](https://docs.python.org/2/tutorial/modules.html#intra-package-references):
+
+> the `import` statement first looks in the containing package before looking in the standard module search path.
+
+In fact, they elsewhere explain that, due to Python 2's default relative import semantics, a file `string.py` [can completely shadow](https://docs.python.org/2/whatsnew/2.5.html#pep-328-absolute-and-relative-imports) the built-in `string` module.
+
+[Furthermore](https://docs.python.org/2/tutorial/modules.html#compiled-python-files):
+
 > It is possible to have a file called spam.pyc (or spam.pyo when -O is used) without a file spam.py for the same module.
 
 This means that, if a module has imported and compiled and later moved, its corresponding .pyc file may remain **as a viable, identically-named module of its own**.
 
-With Python 2's relative import semantics, this creates a problem, since this "ghost" module may shadow the name of the moved, "real" module and render it inaccessible. Consider the following project structure:
+Consider the following Django project structure:
 
     $ tree ap
     ap
@@ -65,7 +77,7 @@ After running the project, the file tree might look like this:
 
 (Side note: Certain .py files do not have corresponding .pyc files because they are executed as scripts rather than imported. If desired, .pyc files may be [manually generated](https://docs.python.org/2/library/compileall.html#module-compileall) for them via `python -m compileall`. Remember, though, that this will only affect the scripts' load time, and must be repeated after every change to the scripts, or else Python will detect that the .pyc files are outdated and ignore them.)
 
-Now suppose we move utils.py out of the organization app, to become a base-level app-agnostic module. To do this properly, the version control system must be made aware of the move, and any `from organization import utils` or `from . import utils` statements must be changed to `import utils`. (This process is as simple as dragging and dropping the file with PyCharm and other similar tools, but is also doable manually.) The file tree will now look like this:
+Now suppose we refactor utils.py out of the organization app, to become a base-level app-agnostic module. To do this properly, the version control system must be made aware of the move, and any `from organization import utils` or `from . import utils` statements must be changed to `import utils`. (This process is as simple as dragging and dropping the file with PyCharm and other similar tools, but is also doable manually.) The file tree will now look like this:
 
     ap
     ├── ap
@@ -97,16 +109,9 @@ Note the file ap/organization/utils.pyc, which should be ignored by the VCS and 
 The problem is that, even if the imports have been changed as described, within the package `organization` the statement `import utils` still first looks in the local directory and finds `utils.pyc`, yielding import errors when the code attempts to access new attributes defined in ap/utils.py.
 
 
-https://docs.python.org/2/tutorial/modules.html#the-module-search-path
-> When a module named `spam` is imported, the interpreter first searches for a built-in module with that name. If not found, it then searches for a file named `spam.py` in a list of directories given by the variable `sys.path`.
-
-https://docs.python.org/2/tutorial/modules.html#intra-package-references
-> the import statement first looks in the containing package before looking in the standard module search path.
-
-
 ## Solution
 
-A quick fix for this problem is to manually delete the rogue .pyc files, although they will return the next time the module is imported. For a more permanent fix, add a post-checkout hook to Git, or configure your environment to never write out .pyc files in the first place.
+A quick fix for this problem is to manually delete the rogue .pyc files, although they will return when switching to and from a version that does not have the change. For a more permanent fix, add a post-checkout hook to Git, or configure your environment to never write out .pyc files in the first place.
 
 
 ### Manual Removal
@@ -158,7 +163,7 @@ However, the -B option does not appear to work with django (TODO: find out why).
     $ ./manage.py runserver
     $ find . -name '*.pyc'  # No .pyc files found.
 
-This process may be simplified by adding `PYTHONDONTWRITEBYTECODE=1` to the environment settings of your run configuration:
+This process may be simplified by adding it to the environment settings of your run configuration:
 
 - In PyCharm, select `Run -> Edit Configurations...`, select the configuration you use and the `Configuration` tab, click the `...` button next to `Environment variables:`, and add a Name `PYTHONDONTWRITEBYTECODE` with Value `1`. (Click `OK` on both modal windows to save the changes.)
 
@@ -187,6 +192,8 @@ This process may be simplified by adding `PYTHONDONTWRITEBYTECODE=1` to the envi
 These problems have been addressed in Python 3, which uses absolute import semantics by default.
 
 - TODO: what happens in the case `from . import module` where `module.py` has been moved to another package but `__pycache__/module.[magic].pyc` persists?
+
+- TODO: mention `from __future__ import absolute_import`.
 
 
 ## Further Reading
