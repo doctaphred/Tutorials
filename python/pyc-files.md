@@ -3,7 +3,7 @@
 
 ## TL;DR
 
-Python 2's import semantics and handling of .pyc files can cause an insidious development problem when moving modules to different directories. To avoid it, either set `PYTHONDONTWRITEBYTECODE=1` in your development environment, or else be sure to delete .pyc files when refactoring your project structure or switching between VCS branches.
+Python 2's import semantics and handling of .pyc files can cause an insidious development problem when moving modules to different directories. To avoid it, delete .pyc files when refactoring your project structure or when switching between VCS branches (either manually or via a Git hook), or set `PYTHONDONTWRITEBYTECODE=1` in your development environment.
 
 
 ## Background
@@ -98,7 +98,7 @@ After running the project, the file tree might look like this:
 
 > Side note: Certain .py files do not have corresponding .pyc files because they are executed as scripts rather than imported. If desired, .pyc files may be [manually generated](https://docs.python.org/2/library/compileall.html#module-compileall) for them via `python -m compileall`. Remember, though, that this will only affect the scripts' load time, and must be repeated after every change to the scripts, or else Python will detect that the .pyc files are outdated and ignore them.
 
-Now suppose we refactor utils.py out of the organization app, to become a base-level app-agnostic module. To do this properly, the version control system must be made aware of the move, and any `from organization import utils` or `from . import utils` statements must be changed to `import utils`. (This process is as simple as dragging and dropping the file with PyCharm and other similar tools, but is also doable manually.) The file tree will now look like this:
+Now suppose we refactor `utils.py` out of the organization app, to become a base-level app-agnostic module. To do this properly, the version control system must be made aware of the move, and any `from organization import utils` or `from . import utils` statements must be changed to `import utils`. (This process is as simple as dragging and dropping the file with PyCharm and other similar tools, but is also doable manually.) The file tree will now look like this:
 
     ap
     ├── ap
@@ -125,9 +125,9 @@ Now suppose we refactor utils.py out of the organization app, to become a base-l
     │   └── views.pyc
     └── utils.py
 
-Note the file ap/organization/utils.pyc, which should be ignored by the VCS and thus remains in the `organization` package. This .pyc file constitutes a viable module, but as explained above, no imports should be specifically targeting it anymore.
+Note the file `ap/organization/utils.pyc`, which should be ignored by the VCS and thus remains in the `organization` package. This .pyc file constitutes a viable module, but as explained above, no imports should be specifically targeting it anymore.
 
-The problem is that, even if the imports have been changed as described, within the package `organization` the statement `import utils` still first looks in the local directory and finds `utils.pyc`, yielding import errors when the code attempts to access new attributes defined in ap/utils.py.
+The problem is that, even if the imports have been changed as described, within the package `organization` the statement `import utils` still first looks in the local directory and finds `utils.pyc`, yielding import errors when the code attempts to access new attributes defined in `ap/utils.py`.
 
 
 ## Solution
@@ -188,7 +188,7 @@ This process may be simplified by adding it to the environment settings of your 
 
 - In PyCharm, select `Run -> Edit Configurations...`, select the configuration you use and the `Configuration` tab, click the `...` button next to `Environment variables:`, and add a Name `PYTHONDONTWRITEBYTECODE` with Value `1`. (Click `OK` on both modal windows to save the changes.)
 
-- For a more general solution, [add the line `export PYTHONDONTWRITEBYTECODE=1` to your `~/.bashrc` file](http://unix.stackexchange.com/questions/107851/using-export-in-bashrc). Note that this will affect your Python system-wide, though, and might not be desirable.
+- For a more general solution, add the line `export PYTHONDONTWRITEBYTECODE=1` [to your `~/.bashrc` file](http://unix.stackexchange.com/questions/107851/using-export-in-bashrc). Note that this will affect your Python system-wide, though, and might not be desirable.
 
 - For a more targeted solution, add that line instead to your virtualenv's `bin/activate` file. This will disable writing .pyc files in that shell after you source the file, but will not unset the variable when you call `deactivate`; other shells will remain unaffected, though. If you really want your virtualenv to set and unset that variable transparently like it does for your `PATH`, make the following changes to its `bin/activate`:
 
@@ -212,14 +212,14 @@ This process may be simplified by adding it to the environment settings of your 
 
 These problems have been addressed in Python 3, which uses absolute import semantics by default.
 
-- TODO: what happens in the case `from . import module` where `module.py` has been moved to another package but `__pycache__/module.[magic].pyc` persists?
+- TODO: what happens in Python 3: `from . import module`, where `module.py` has been moved to another package but `__pycache__/module.[magic].pyc` persists?
 
 - TODO: mention `from __future__ import absolute_import`.
 
 
 ## Conclusion
 
-This problem is surprisingly easily encountered and can be devastatingly subtle to identify. Python 3 will relieve many such headaches (and hopefully not introduce too many more), but until you're using it, I recommend either configuring your IDE's environment settings or adding a Git hook to avoid this particular frustration.
+This problem is surprisingly easily encountered and can be devastatingly subtle to identify. Python 3 will relieve many such headaches (and hopefully not introduce too many more), but until you're using it, I recommend either adding a Git hook or configuring your IDE's environment settings to avoid this particular frustration.
 
 
 ## Further Reading
