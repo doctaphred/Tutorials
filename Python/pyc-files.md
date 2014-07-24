@@ -177,7 +177,7 @@ From [the docs](https://docs.python.org/2/using/cmdline.html#envvar-PYTHONDONTWR
 
 > If this is set, Python won’t try to write .pyc or .pyo files on the import of source modules. This is equivalent to specifying the -B option.
 
-However, the -B option does not appear to work with django (TODO: find out why). Setting `PYTHONDONTWRITEBYTECODE` does, though:
+However, the -B option does not appear to work with Django (TODO: find out why). Setting `PYTHONDONTWRITEBYTECODE` does, though:
 
     $ find . -name '*.pyc' -delete
     $ export PYTHONDONTWRITEBYTECODE=1
